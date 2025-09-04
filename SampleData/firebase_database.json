@@ -1,0 +1,264 @@
+{
+  "Collections": {
+    "users": {
+      "Collection Description": "User accounts and profile information",
+      "Collection Additional Note": "Stores user authentication data, preferences, and extended profile information",
+      "fields": {
+        "uid": {
+          "Field Description": "Unique user identifier from Firebase Auth",
+          "Additional Note": "Required field, used as document ID"
+        },
+        "email": {
+          "Field Description": "User's email address",
+          "Additional Note": "Required field, must be unique"
+        },
+        "displayName": {
+          "Field Description": "User's display name",
+          "Additional Note": "Optional field, shown in UI"
+        },
+        "role": {
+          "Field Description": "User role in the system",
+          "Additional Note": "Values: admin, developer, designer, viewer"
+        },
+        "isActive": {
+          "Field Description": "Whether the user account is active",
+          "Additional Note": "Used for account suspension"
+        },
+        "preferences": {
+          "Field Description": "User preferences and settings",
+          "Additional Note": "Nested object with theme, language, notifications"
+        },
+        "profile": {
+          "Field Description": "Extended profile information",
+          "Additional Note": "Nested object with bio, skills, location"
+        }
+      }
+    },
+    "projects": {
+      "Collection Description": "Project information and team collaboration",
+      "Collection Additional Note": "Manages project data, team members, and project settings",
+      "fields": {
+        "name": {
+          "Field Description": "Project name",
+          "Additional Note": "Required field, displayed in project list"
+        },
+        "description": {
+          "Field Description": "Project description",
+          "Additional Note": "Optional field, provides project details"
+        },
+        "status": {
+          "Field Description": "Current project status",
+          "Additional Note": "Values: planning, active, completed, archived"
+        },
+        "createdBy": {
+          "Field Description": "User ID of project creator",
+          "Additional Note": "Reference to users collection"
+        },
+        "members": {
+          "Field Description": "Project team members",
+          "Additional Note": "Nested object with user roles and permissions"
+        },
+        "settings": {
+          "Field Description": "Project-specific settings",
+          "Additional Note": "Visibility, comments, auto-save options"
+        },
+        "progress": {
+          "Field Description": "Project completion progress",
+          "Additional Note": "Percentage complete and last updated timestamp"
+        }
+      }
+    },
+    "tasks": {
+      "Collection Description": "Individual tasks within projects",
+      "Collection Additional Note": "Task management with assignments, status tracking, and time management",
+      "fields": {
+        "title": {
+          "Field Description": "Task title",
+          "Additional Note": "Required field, displayed in task list"
+        },
+        "description": {
+          "Field Description": "Task description",
+          "Additional Note": "Optional field, detailed task information"
+        },
+        "status": {
+          "Field Description": "Current task status",
+          "Additional Note": "Values: todo, in_progress, completed, cancelled"
+        },
+        "priority": {
+          "Field Description": "Task priority level",
+          "Additional Note": "Values: low, medium, high, urgent"
+        },
+        "assignedTo": {
+          "Field Description": "User ID of assigned person",
+          "Additional Note": "Reference to users collection"
+        },
+        "projectId": {
+          "Field Description": "Reference to parent project",
+          "Additional Note": "Required field, links task to project"
+        },
+        "dueDate": {
+          "Field Description": "Task due date",
+          "Additional Note": "Optional field, used for deadline tracking"
+        },
+        "timeEstimate": {
+          "Field Description": "Estimated time in hours",
+          "Additional Note": "Used for project planning"
+        },
+        "timeSpent": {
+          "Field Description": "Actual time spent in hours",
+          "Additional Note": "Tracked for time management"
+        }
+      }
+    },
+    "notifications": {
+      "Collection Description": "User notifications and alerts",
+      "Collection Additional Note": "Real-time notification system for user updates and alerts",
+      "fields": {
+        "userId": {
+          "Field Description": "User ID receiving the notification",
+          "Additional Note": "Reference to users collection"
+        },
+        "type": {
+          "Field Description": "Notification type",
+          "Additional Note": "Values: task_assigned, task_completed, project_invite"
+        },
+        "title": {
+          "Field Description": "Notification title",
+          "Additional Note": "Short descriptive title"
+        },
+        "message": {
+          "Field Description": "Notification message",
+          "Additional Note": "Detailed notification content"
+        },
+        "read": {
+          "Field Description": "Whether notification has been read",
+          "Additional Note": "Used for unread count tracking"
+        },
+        "data": {
+          "Field Description": "Additional data for the notification",
+          "Additional Note": "Stores related IDs and context"
+        }
+      }
+    },
+    "comments": {
+      "Collection Description": "Comments on tasks and projects",
+      "Collection Additional Note": "Comment system with replies and like functionality",
+      "fields": {
+        "content": {
+          "Field Description": "Comment content",
+          "Additional Note": "Required field, the actual comment text"
+        },
+        "userId": {
+          "Field Description": "User ID of comment author",
+          "Additional Note": "Reference to users collection"
+        },
+        "taskId": {
+          "Field Description": "Reference to task (if commenting on task)",
+          "Additional Note": "Optional field, links comment to task"
+        },
+        "projectId": {
+          "Field Description": "Reference to project (if commenting on project)",
+          "Additional Note": "Optional field, links comment to project"
+        },
+        "likes": {
+          "Field Description": "Number of likes on comment",
+          "Additional Note": "Counter for comment popularity"
+        },
+        "replies": {
+          "Field Description": "Comment replies",
+          "Additional Note": "Nested subcollection for threaded comments"
+        }
+      }
+    },
+    "attachments": {
+      "Collection Description": "File attachments for tasks and projects",
+      "Collection Additional Note": "File management system with metadata and storage integration",
+      "fields": {
+        "name": {
+          "Field Description": "Original file name",
+          "Additional Note": "Displayed to users"
+        },
+        "url": {
+          "Field Description": "File storage URL",
+          "Additional Note": "Link to file in Firebase Storage"
+        },
+        "type": {
+          "Field Description": "MIME type of file",
+          "Additional Note": "Used for file handling and display"
+        },
+        "size": {
+          "Field Description": "File size in bytes",
+          "Additional Note": "Used for storage quota tracking"
+        },
+        "uploadedBy": {
+          "Field Description": "User ID who uploaded the file",
+          "Additional Note": "Reference to users collection"
+        },
+        "metadata": {
+          "Field Description": "Additional file metadata",
+          "Additional Note": "Image dimensions, document properties, etc."
+        }
+      }
+    },
+    "analytics": {
+      "Collection Description": "Usage analytics and metrics",
+      "Collection Additional Note": "Performance tracking and user activity monitoring",
+      "fields": {
+        "views": {
+          "Field Description": "Number of views",
+          "Additional Note": "Page or project view counter"
+        },
+        "uniqueVisitors": {
+          "Field Description": "Number of unique visitors",
+          "Additional Note": "Distinct user count"
+        },
+        "taskCompletions": {
+          "Field Description": "Number of completed tasks",
+          "Additional Note": "Productivity metric"
+        },
+        "averageTaskTime": {
+          "Field Description": "Average time to complete tasks",
+          "Additional Note": "Performance metric in hours"
+        },
+        "memberActivity": {
+          "Field Description": "Activity tracking per member",
+          "Additional Note": "Nested object with user-specific metrics"
+        },
+        "dailyStats": {
+          "Field Description": "Daily statistics",
+          "Additional Note": "Time-series data for trends"
+        }
+      }
+    },
+    "settings": {
+      "Collection Description": "Global application settings and configuration",
+      "Collection Additional Note": "System-wide configuration and security settings",
+      "fields": {
+        "maxFileSize": {
+          "Field Description": "Maximum allowed file size in bytes",
+          "Additional Note": "Storage limit enforcement"
+        },
+        "allowedFileTypes": {
+          "Field Description": "List of allowed file extensions",
+          "Additional Note": "Security and compatibility control"
+        },
+        "maxProjectMembers": {
+          "Field Description": "Maximum members per project",
+          "Additional Note": "Resource limit control"
+        },
+        "defaultTheme": {
+          "Field Description": "Default UI theme",
+          "Additional Note": "Values: light, dark"
+        },
+        "maintenanceMode": {
+          "Field Description": "Whether app is in maintenance mode",
+          "Additional Note": "Emergency system control"
+        },
+        "security": {
+          "Field Description": "Security settings",
+          "Additional Note": "Password policies, session timeouts"
+        }
+      }
+    }
+  }
+}
