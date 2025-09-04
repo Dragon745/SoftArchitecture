@@ -14,31 +14,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get current version and commit
-        id: version_info
+      - name: Get next release number
+        id: release_number
         run: |
-          CURRENT_VERSION=$(grep -oP '<Version>\K[^<]+' SoftArchitecture.csproj)
-          COMMIT_HASH=$(git rev-parse --short HEAD)
-          RELEASE_VERSION="${CURRENT_VERSION}-${COMMIT_HASH}"
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "commit_hash=$COMMIT_HASH" >> $GITHUB_OUTPUT
+          # Get the latest release number
+          LATEST_RELEASE=$(gh release list --limit 1 --json tagName | jq -r '.[0].tagName // "v0"')
+          echo "Latest release: $LATEST_RELEASE"
+
+          # Extract number and increment
+          if [[ $LATEST_RELEASE =~ v([0-9]+) ]]; then
+            NEXT_NUMBER=$((BASH_REMATCH[1] + 1))
+          else
+            NEXT_NUMBER=1
+          fi
+
+          RELEASE_VERSION="v$NEXT_NUMBER"
           echo "release_version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
-          echo "Commit hash: $COMMIT_HASH"
-          echo "Release version: $RELEASE_VERSION"
+          echo "Next release: $RELEASE_VERSION"
 
       - name: Create release zip
         run: |
           # Create zip file from publish folder
           cd bin/publish
-          zip -r "../SoftArchitecture-v${{ steps.version_info.outputs.release_version }}.zip" .
+          zip -r "../SoftArchitecture-${{ steps.release_number.outputs.release_version }}.zip" .
           cd ../..
 
       - name: Create Release
         run: |
-          gh release create "${{ steps.version_info.outputs.release_version }}" \
-            --title "SoftArchitecture v${{ steps.version_info.outputs.release_version }}" \
-            --notes "## SoftArchitecture v${{ steps.version_info.outputs.release_version }}
+          gh release create "${{ steps.release_number.outputs.release_version }}" \
+            --title "SoftArchitecture ${{ steps.release_number.outputs.release_version }}" \
+            --notes "## SoftArchitecture ${{ steps.release_number.outputs.release_version }}
 
             ### What's New
             - Professional project management tool for software developers
@@ -58,8 +63,8 @@ jobs:
 
       - name: Upload Release Asset
         run: |
-          gh release upload "${{ steps.version_info.outputs.release_version }}" \
-            "bin/SoftArchitecture-v${{ steps.version_info.outputs.release_version }}.zip" \
+          gh release upload "${{ steps.release_number.outputs.release_version }}" \
+            "bin/SoftArchitecture-${{ steps.release_number.outputs.release_version }}.zip" \
             --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
