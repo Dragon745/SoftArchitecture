@@ -25,14 +25,18 @@
             <Setter Property="IsSelected" Value="False"/>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#3399FF"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#E3F2FD"/>
+                    <Setter Property="BorderBrush" Value="#2196F3"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E5F3FF"/>
+                    <Setter Property="Background" Value="#F5F5F5"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Boolean to Visibility Converter -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
         <!-- Professional Button Style -->
         <Style x:Key="ProfessionalButtonStyle" TargetType="Button">
@@ -73,6 +77,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
@@ -80,6 +85,7 @@
         <Menu Grid.Row="0" Background="#F0F0F0" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1">
             <MenuItem Header="File" Background="Transparent" Foreground="#1E1E1E">
                 <MenuItem Header="Open Project Folder" Click="OpenFolderButton_Click"/>
+                <MenuItem Header="Create Sample Data" Click="CreateSampleData_Click"/>
                 <Separator/>
                 <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
             </MenuItem>
@@ -91,8 +97,21 @@
             </MenuItem>
         </Menu>
         
+        <!-- Professional Toolbar -->
+        <ToolBar Grid.Row="1" Background="#F8F8F8" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1">
+            <Button Content="📁 Open Project" 
+                    Style="{StaticResource ProfessionalButtonStyle}"
+                    Click="OpenFolderButton_Click"
+                    ToolTip="Open a project folder containing ToDo.json"/>
+            <Separator/>
+            <Button Content="📋 Create Sample Data" 
+                    Style="{StaticResource ProfessionalButtonStyle}"
+                    Click="CreateSampleData_Click"
+                    ToolTip="Create sample ToDo.json and firebase_database.json files in a selected folder"/>
+        </ToolBar>
+        
         <!-- Main Content Area -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <TabControl x:Name="MainTabControl" 
                         Background="Transparent" 
                         BorderThickness="0">
@@ -534,12 +553,314 @@
                         </Grid>
                     </Grid>
                 </TabItem>
+                
+                <TabItem Header="Firebase Database">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Firebase Database Header -->
+                        <Border Grid.Row="0" 
+                                Background="White" 
+                                BorderBrush="#CCCCCC" 
+                                BorderThickness="0,0,0,1" 
+                                Padding="20,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Database Overview -->
+                                <Border Grid.Column="0" 
+                                        Background="#F8F8F8" 
+                                        BorderBrush="#CCCCCC" 
+                                        BorderThickness="1" 
+                                        Padding="15,12" 
+                                        Margin="0,0,10,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Firebase Database Schema" 
+                                                   FontSize="12" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#1E1E1E" 
+                                                   Margin="0,0,0,5"/>
+                                        <TextBlock x:Name="DatabaseNameText" 
+                                                   Text="Firebase Database" 
+                                                   FontSize="14" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#1E1E1E"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="DatabaseDescriptionText" 
+                                                   Text="Database collections and field definitions" 
+                                                   FontSize="11" 
+                                                   Foreground="#666666"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Database Stats -->
+                                <Border Grid.Column="1" 
+                                        Background="#F0F8FF" 
+                                        BorderBrush="#CCCCCC" 
+                                        BorderThickness="1" 
+                                        Padding="15,12">
+                                    <StackPanel>
+                                        <TextBlock Text="Database Stats" 
+                                                   FontSize="12" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="#1E1E1E" 
+                                                   Margin="0,0,0,5"/>
+                                        <TextBlock x:Name="TotalCollectionsText" 
+                                                   Text="0 Collections" 
+                                                   FontSize="14" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="#1E1E1E"/>
+                                        <TextBlock x:Name="TotalFieldsText" 
+                                                   Text="0 Fields" 
+                                                   FontSize="11" 
+                                                   Foreground="#666666"
+                                                   Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Main Content Area - TreeView -->
+                        <Border Grid.Row="1" 
+                                Background="White" 
+                                BorderBrush="#CCCCCC" 
+                                BorderThickness="0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <!-- TreeView Header -->
+                                <Border Grid.Row="0" 
+                                        Background="#F8F8F8" 
+                                        BorderBrush="#CCCCCC" 
+                                        BorderThickness="0,0,0,1" 
+                                        Padding="15,12">
+                                    <TextBlock Text="Database Schema Tree" 
+                                               FontSize="14" 
+                                               FontWeight="SemiBold" 
+                                               Foreground="#1E1E1E"/>
+                                </Border>
+                                
+                                                                                                                                   <!-- Collections Grid Display -->
+                                 <ScrollViewer Grid.Row="1" 
+                                               VerticalScrollBarVisibility="Auto" 
+                                               HorizontalScrollBarVisibility="Auto">
+                                     <Grid x:Name="DatabaseSchemaPanel" 
+                                           Background="White"
+                                           Margin="15">
+                                         <Grid.RowDefinitions>
+                                             <RowDefinition Height="Auto"/>
+                                             <RowDefinition Height="*"/>
+                                         </Grid.RowDefinitions>
+                                         
+                                         <!-- Database Header -->
+                                         <Border Grid.Row="0" 
+                                                 Background="#F8F9FA" 
+                                                 BorderBrush="#E9ECEF" 
+                                                 BorderThickness="1" 
+                                                 CornerRadius="6"
+                                                 Padding="20,15" 
+                                                 Margin="0,0,0,20">
+                                             <Grid>
+                                                 <Grid.ColumnDefinitions>
+                                                     <ColumnDefinition Width="Auto"/>
+                                                     <ColumnDefinition Width="*"/>
+                                                 </Grid.ColumnDefinitions>
+                                                 
+                                                 <!-- Database Icon -->
+                                                 <TextBlock Grid.Column="0" 
+                                                            Text="🗄️" 
+                                                            FontSize="24" 
+                                                            Margin="0,0,15,0"
+                                                            VerticalAlignment="Top"/>
+                                                 
+                                                 <!-- Database Content -->
+                                                 <StackPanel Grid.Column="1">
+                                                     <TextBlock Text="Firebase Database Schema" 
+                                                                FontSize="18" 
+                                                                FontWeight="Bold" 
+                                                                Foreground="#1E1E1E"
+                                                                Margin="0,0,0,8"/>
+                                                     <TextBlock Text="Database collections and field definitions displayed as cards" 
+                                                                FontSize="13" 
+                                                                Foreground="#666666"
+                                                                TextWrapping="Wrap"/>
+                                                 </StackPanel>
+                                             </Grid>
+                                         </Border>
+                                         
+                                                                                   <!-- Collections Grid -->
+                                          <ItemsControl Grid.Row="1" x:Name="CollectionsContainer">
+                                              <ItemsControl.ItemsPanel>
+                                                  <ItemsPanelTemplate>
+                                                      <UniformGrid Columns="4" Rows="0"/>
+                                                  </ItemsPanelTemplate>
+                                              </ItemsControl.ItemsPanel>
+                                              <ItemsControl.ItemTemplate>
+                                                  <DataTemplate>
+                                                      <Border Background="White" 
+                                                              BorderBrush="#E9ECEF" 
+                                                              BorderThickness="1" 
+                                                              CornerRadius="8"
+                                                              Padding="20,15" 
+                                                              Margin="8"
+                                                              MinWidth="250"
+                                                              MaxWidth="400"
+                                                              Effect="{x:Null}">
+                                                         <Border.Style>
+                                                             <Style TargetType="Border">
+                                                                 <Style.Triggers>
+                                                                     <Trigger Property="IsMouseOver" Value="True">
+                                                                         <Setter Property="BorderBrush" Value="#2196F3"/>
+                                                                         <Setter Property="BorderThickness" Value="2"/>
+                                                                         <Setter Property="Effect">
+                                                                             <Setter.Value>
+                                                                                 <DropShadowEffect Color="#2196F3" 
+                                                                                                   BlurRadius="10" 
+                                                                                                   ShadowDepth="3" 
+                                                                                                   Opacity="0.3"/>
+                                                                             </Setter.Value>
+                                                                         </Setter>
+                                                                     </Trigger>
+                                                                 </Style.Triggers>
+                                                             </Style>
+                                                         </Border.Style>
+                                                         
+                                                                                                                   <Grid>
+                                                              <Grid.RowDefinitions>
+                                                                  <RowDefinition Height="Auto"/>
+                                                                  <RowDefinition Height="Auto"/>
+                                                                  <RowDefinition Height="Auto"/>
+                                                                  <RowDefinition Height="Auto"/>
+                                                              </Grid.RowDefinitions>
+                                                             
+                                                             <!-- Collection Header -->
+                                                             <Grid Grid.Row="0" Margin="0,0,0,12">
+                                                                 <Grid.ColumnDefinitions>
+                                                                     <ColumnDefinition Width="Auto"/>
+                                                                     <ColumnDefinition Width="*"/>
+                                                                 </Grid.ColumnDefinitions>
+                                                                 
+                                                                 <!-- Collection Icon -->
+                                                                 <TextBlock Grid.Column="0" 
+                                                                            Text="📁" 
+                                                                            FontSize="20" 
+                                                                            Margin="0,0,10,0"
+                                                                            VerticalAlignment="Top"/>
+                                                                 
+                                                                 <!-- Collection Name -->
+                                                                 <StackPanel Grid.Column="1">
+                                                                     <TextBlock Text="{Binding Name}" 
+                                                                                FontSize="16" 
+                                                                                FontWeight="Bold" 
+                                                                                Foreground="#1E1E1E"
+                                                                                TextWrapping="Wrap"
+                                                                                LineHeight="20"/>
+                                                                     <TextBlock Text="{Binding Children.Count, StringFormat='{}{0} fields'}" 
+                                                                                FontSize="11" 
+                                                                                Foreground="#666666"
+                                                                                Margin="0,4,0,0"/>
+                                                                 </StackPanel>
+                                                             </Grid>
+                                                             
+                                                             <!-- Collection Description -->
+                                                             <TextBlock Grid.Row="1" 
+                                                                        Text="{Binding Description}" 
+                                                                        FontSize="12" 
+                                                                        Foreground="#666666" 
+                                                                        TextWrapping="Wrap" 
+                                                                        Margin="0,0,0,12"
+                                                                        LineHeight="16"/>
+                                                             
+                                                                                                                           <!-- Fields Preview -->
+                                                              <StackPanel Grid.Row="2" 
+                                                                         Margin="0,0,0,12">
+                                                                  <TextBlock Text="Fields:" 
+                                                                             FontSize="11" 
+                                                                             FontWeight="SemiBold" 
+                                                                             Foreground="#666666" 
+                                                                             Margin="0,0,0,6"/>
+                                                                  <ItemsControl ItemsSource="{Binding Children}">
+                                                                      <ItemsControl.ItemTemplate>
+                                                                          <DataTemplate>
+                                                                              <Border Background="#F8F9FA" 
+                                                                                      BorderBrush="#E9ECEF" 
+                                                                                      BorderThickness="1" 
+                                                                                      CornerRadius="4"
+                                                                                      Padding="10,8" 
+                                                                                      Margin="0,0,0,6">
+                                                                                  <Grid>
+                                                                                      <Grid.ColumnDefinitions>
+                                                                                          <ColumnDefinition Width="Auto"/>
+                                                                                          <ColumnDefinition Width="*"/>
+                                                                                      </Grid.ColumnDefinitions>
+                                                                                      
+                                                                                      <!-- Field Icon -->
+                                                                                      <TextBlock Grid.Column="0" 
+                                                                                                 Text="📄" 
+                                                                                                 FontSize="12" 
+                                                                                                 Margin="0,0,8,0"
+                                                                                                 VerticalAlignment="Top"/>
+                                                                                      
+                                                                                      <!-- Field Content -->
+                                                                                      <StackPanel Grid.Column="1">
+                                                                                          <TextBlock Text="{Binding Name}" 
+                                                                                                     FontSize="12" 
+                                                                                                     FontWeight="SemiBold" 
+                                                                                                     Foreground="#1E1E1E"
+                                                                                                     TextWrapping="Wrap"
+                                                                                                     LineHeight="14"/>
+                                                                                          <TextBlock Text="{Binding Description}" 
+                                                                                                     FontSize="10" 
+                                                                                                     Foreground="#666666" 
+                                                                                                     TextWrapping="Wrap" 
+                                                                                                     Margin="0,2,0,0"
+                                                                                                     LineHeight="12"/>
+                                                                                      </StackPanel>
+                                                                                  </Grid>
+                                                                              </Border>
+                                                                          </DataTemplate>
+                                                                      </ItemsControl.ItemTemplate>
+                                                                  </ItemsControl>
+                                                              </StackPanel>
+                                                             
+                                                                                                                           <!-- Additional Note -->
+                                                              <TextBlock Grid.Row="3" 
+                                                                         Text="{Binding AdditionalNote}" 
+                                                                         FontSize="10" 
+                                                                         Foreground="#999999" 
+                                                                         TextWrapping="Wrap" 
+                                                                         Margin="0,0,0,0"
+                                                                         Visibility="{Binding ShowAdditionalNote}"
+                                                                         FontStyle="Italic"
+                                                                         LineHeight="12"/>
+                                                         </Grid>
+                                                     </Border>
+                                                 </DataTemplate>
+                                             </ItemsControl.ItemTemplate>
+                                         </ItemsControl>
+                                     </Grid>
+                                 </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </Grid>
         
         <!-- Loading Overlay -->
         <Border x:Name="LoadingOverlay" 
-                Grid.RowSpan="2" 
+                Grid.RowSpan="3" 
                 Background="#80000000" 
                 Visibility="Collapsed">
             <Grid>

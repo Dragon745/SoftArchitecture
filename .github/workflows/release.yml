@@ -1,0 +1,65 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v*" # Trigger on version tags
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from project file
+        id: version
+        run: |
+          # Extract version from .csproj file
+          VERSION=$(grep -oP '<Version>\K[^<]+' SoftArchitecture.csproj)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Create release zip
+        run: |
+          # Create zip file from publish folder
+          cd bin/publish
+          zip -r "../SoftArchitecture-v${{ steps.version.outputs.version }}.zip" .
+          cd ../..
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: SoftArchitecture v${{ steps.version.outputs.version }}
+          body: |
+            ## SoftArchitecture v${{ steps.version.outputs.version }}
+
+            ### What's New
+            - Professional project management tool for software developers
+
+            ### Installation
+            1. Download the zip file
+            2. Extract the contents
+            3. Run `setup.exe` to install the application
+
+            ### System Requirements
+            - Windows 10 or later
+            - .NET 8.0 Runtime
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/SoftArchitecture-v${{ steps.version.outputs.version }}.zip
+          asset_name: SoftArchitecture-v${{ steps.version.outputs.version }}.zip
+          asset_content_type: application/zip

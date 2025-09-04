@@ -84,21 +84,217 @@ namespace SoftArchitecture
         }
     }
 
+    public class CollectionWrapper : INotifyPropertyChanged
+    {
+        private string _collectionName;
+        private string _collectionDescription;
+        private string _collectionAdditionalNote;
+        private bool _isSelected;
+        private int _fieldCount;
+
+        public string CollectionName
+        {
+            get => _collectionName;
+            set => SetProperty(ref _collectionName, value);
+        }
+
+        public string CollectionDescription
+        {
+            get => _collectionDescription;
+            set => SetProperty(ref _collectionDescription, value);
+        }
+
+        public string CollectionAdditionalNote
+        {
+            get => _collectionAdditionalNote;
+            set => SetProperty(ref _collectionAdditionalNote, value);
+        }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        public int FieldCount
+        {
+            get => _fieldCount;
+            set => SetProperty(ref _fieldCount, value);
+        }
+
+        public string FieldCountText
+        {
+            get => $"{FieldCount} fields";
+        }
+
+        public CollectionWrapper(string collectionName, string description, string additionalNote, int fieldCount)
+        {
+            _collectionName = collectionName;
+            _collectionDescription = description;
+            _collectionAdditionalNote = additionalNote;
+            _fieldCount = fieldCount;
+            _isSelected = false;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+    }
+
+    public class FieldWrapper : INotifyPropertyChanged
+    {
+        private string _fieldName;
+        private string _fieldDescription;
+        private string _additionalNote;
+        private bool _isSelected;
+
+        public string FieldName
+        {
+            get => _fieldName;
+            set => SetProperty(ref _fieldName, value);
+        }
+
+        public string FieldDescription
+        {
+            get => _fieldDescription;
+            set => SetProperty(ref _fieldDescription, value);
+        }
+
+        public string AdditionalNote
+        {
+            get => _additionalNote;
+            set => SetProperty(ref _additionalNote, value);
+        }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        public FieldWrapper(string fieldName, string description, string additionalNote)
+        {
+            _fieldName = fieldName;
+            _fieldDescription = description;
+            _additionalNote = additionalNote;
+            _isSelected = false;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+    }
+
+    public class TreeNodeItem : INotifyPropertyChanged
+    {
+        private string _name;
+        private string _description;
+        private string _additionalNote;
+        private string _icon;
+        private bool _showAdditionalNote;
+        private ObservableCollection<TreeNodeItem> _children;
+
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
+
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        public string AdditionalNote
+        {
+            get => _additionalNote;
+            set => SetProperty(ref _additionalNote, value);
+        }
+
+        public string Icon
+        {
+            get => _icon;
+            set => SetProperty(ref _icon, value);
+        }
+
+        public bool ShowAdditionalNote
+        {
+            get => _showAdditionalNote;
+            set => SetProperty(ref _showAdditionalNote, value);
+        }
+
+        public ObservableCollection<TreeNodeItem> Children
+        {
+            get => _children;
+            set => SetProperty(ref _children, value);
+        }
+
+        public TreeNodeItem(string name, string description, string additionalNote, string icon)
+        {
+            _name = name;
+            _description = description;
+            _additionalNote = additionalNote;
+            _icon = icon;
+            _showAdditionalNote = !string.IsNullOrEmpty(additionalNote);
+            _children = new ObservableCollection<TreeNodeItem>();
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
         private ProjectData? _projectData;
+        private FirebaseDatabaseData? _firebaseDatabaseData;
         private string? _currentProjectPath;
         private int _selectedPhaseIndex = -1;
-        private int _selectedTaskIndex = -1; // Added for task selection
+        private int _selectedTaskIndex = -1;
         private const string SETTINGS_FILE = "settings.json";
 
         public MainWindow()
         {
             InitializeComponent();
             LoadLastProjectOnStartup();
+            LoadFirebaseDatabaseData();
         }
 
         private async void LoadLastProjectOnStartup()
@@ -160,6 +356,67 @@ namespace SoftArchitecture
             }
         }
 
+        private void LoadFirebaseDatabaseData()
+        {
+            try
+            {
+                string jsonPath = IOPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "SampleData", "firebase_database.json");
+                _firebaseDatabaseData = FirebaseDatabaseService.LoadFirebaseDatabaseData(jsonPath);
+
+                if (_firebaseDatabaseData != null)
+                {
+                    PopulateFirebaseDatabaseTreeView();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading Firebase database data: {ex.Message}");
+            }
+        }
+
+        private void PopulateFirebaseDatabaseTreeView()
+        {
+            if (_firebaseDatabaseData == null) return;
+
+            // Update database statistics
+            int totalCollections = _firebaseDatabaseData.Collections.Count;
+            int totalFields = _firebaseDatabaseData.Collections.Sum(c => c.Value.Fields.Count);
+
+            TotalCollectionsText.Text = $"{totalCollections} Collections";
+            TotalFieldsText.Text = $"{totalFields} Fields";
+
+            // Create collection nodes for the fixed display
+            var collectionNodes = new List<TreeNodeItem>();
+
+            // Add collections
+            foreach (var collection in _firebaseDatabaseData.Collections)
+            {
+                var collectionNode = new TreeNodeItem(
+                    collection.Key,
+                    collection.Value.CollectionDescription,
+                    collection.Value.CollectionAdditionalNote,
+                    "📁"
+                );
+
+                // Add fields as children of collection
+                foreach (var field in collection.Value.Fields)
+                {
+                    var fieldNode = new TreeNodeItem(
+                        field.Key,
+                        field.Value.FieldDescription,
+                        field.Value.AdditionalNote,
+                        "📄"
+                    );
+                    collectionNode.Children.Add(fieldNode);
+                }
+
+                collectionNodes.Add(collectionNode);
+            }
+
+            // Set the CollectionsContainer data source
+            CollectionsContainer.ItemsSource = collectionNodes;
+        }
+
         private async void OpenFolderButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog
@@ -196,6 +453,127 @@ namespace SoftArchitecture
                 "About Project Manager",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
+        }
+
+        private async void CreateSampleData_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dialog = new System.Windows.Forms.FolderBrowserDialog
+                {
+                    Description = "Select a folder to save sample data files",
+                    ShowNewFolderButton = true
+                };
+
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string selectedPath = dialog.SelectedPath;
+
+                    // Show loading overlay
+                    LoadingOverlay.Visibility = Visibility.Visible;
+
+                    try
+                    {
+                        // Copy sample files to the selected folder
+                        await System.Threading.Tasks.Task.Run(() => CopySampleFiles(selectedPath));
+
+                        // Set the current working folder to the selected path
+                        _currentProjectPath = selectedPath;
+                        SaveLastProjectPath(_currentProjectPath);
+
+                        // Show success message
+                        System.Windows.MessageBox.Show(
+                            $"Sample data files have been created successfully!\n\nFiles created:\n• ToDo.json\n• firebase_database.json\n\nLocation: {selectedPath}\n\nYou can now open this folder as a project.",
+                            "Sample Data Created",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+
+                        // Load the newly created project
+                        await LoadProjectData();
+                    }
+                    finally
+                    {
+                        // Hide loading overlay
+                        LoadingOverlay.Visibility = Visibility.Collapsed;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                System.Windows.MessageBox.Show(
+                    $"Error creating sample data: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void CopySampleFiles(string targetPath)
+        {
+            try
+            {
+                // Ensure target directory exists
+                if (!Directory.Exists(targetPath))
+                {
+                    Directory.CreateDirectory(targetPath);
+                }
+
+                // Get the source paths for sample files
+                string sourceToDoPath = IOPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "SampleData", "ToDo.json");
+                string sourceFirebasePath = IOPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "SampleData", "firebase_database.json");
+
+                // Define target paths
+                string targetToDoPath = IOPath.Combine(targetPath, "ToDo.json");
+                string targetFirebasePath = IOPath.Combine(targetPath, "firebase_database.json");
+
+                // Check if source files exist
+                if (!File.Exists(sourceToDoPath))
+                {
+                    throw new FileNotFoundException($"Source file not found: {sourceToDoPath}");
+                }
+
+                if (!File.Exists(sourceFirebasePath))
+                {
+                    throw new FileNotFoundException($"Source file not found: {sourceFirebasePath}");
+                }
+
+                // Check if target files already exist and ask for confirmation
+                bool toDoExists = File.Exists(targetToDoPath);
+                bool firebaseExists = File.Exists(targetFirebasePath);
+
+                if (toDoExists || firebaseExists)
+                {
+                    string existingFiles = "";
+                    if (toDoExists) existingFiles += "• ToDo.json\n";
+                    if (firebaseExists) existingFiles += "• firebase_database.json\n";
+
+                    var result = System.Windows.MessageBox.Show(
+                        $"The following files already exist in the selected folder:\n{existingFiles}\nDo you want to overwrite them?",
+                        "Files Already Exist",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        return; // User chose not to overwrite
+                    }
+                }
+
+                // Copy the files
+                File.Copy(sourceToDoPath, targetToDoPath, true);
+                File.Copy(sourceFirebasePath, targetFirebasePath, true);
+
+                // Verify files were copied successfully
+                if (!File.Exists(targetToDoPath) || !File.Exists(targetFirebasePath))
+                {
+                    throw new Exception("Failed to copy one or more sample files");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to copy sample files: {ex.Message}", ex);
+            }
         }
 
         private async System.Threading.Tasks.Task LoadProjectData()
