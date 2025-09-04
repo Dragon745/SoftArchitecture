@@ -30,14 +30,17 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.current_version.outputs.current_version }}
-          release_name: SoftArchitecture v${{ steps.current_version.outputs.current_version }}
-          body: |
-            ## SoftArchitecture v${{ steps.current_version.outputs.current_version }}
+        run: |
+          # Check if release already exists
+          if gh release view "v${{ steps.current_version.outputs.current_version }}" >/dev/null 2>&1; then
+            echo "Release v${{ steps.current_version.outputs.current_version }} already exists"
+            exit 0
+          fi
+
+          # Create new release
+          gh release create "v${{ steps.current_version.outputs.current_version }}" \
+            --title "SoftArchitecture v${{ steps.current_version.outputs.current_version }}" \
+            --notes "## SoftArchitecture v${{ steps.current_version.outputs.current_version }}
 
             ### What's New
             - Professional project management tool for software developers
@@ -45,20 +48,20 @@ jobs:
             ### Installation
             1. Download the zip file
             2. Extract the contents
-            3. Run `setup.exe` to install the application
+            3. Run \`setup.exe\` to install the application
 
             ### System Requirements
             - Windows 10 or later
-            - .NET 8.0 Runtime
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+            - .NET 8.0 Runtime" \
+            --draft=false \
+            --prerelease=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/SoftArchitecture-v${{ steps.current_version.outputs.current_version }}.zip
-          asset_name: SoftArchitecture-v${{ steps.current_version.outputs.current_version }}.zip
-          asset_content_type: application/zip
+
+      - name: Upload Release Asset
+        run: |
+          gh release upload "v${{ steps.current_version.outputs.current_version }}" \
+            "bin/SoftArchitecture-v${{ steps.current_version.outputs.current_version }}.zip" \
+            --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
