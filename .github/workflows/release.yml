@@ -13,9 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get current version
         id: current_version
@@ -24,35 +21,11 @@ jobs:
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT_VERSION"
 
-      - name: Calculate new version
-        id: new_version
-        run: |
-          # Get commit count for patch version
-          COMMIT_COUNT=$(git rev-list --count HEAD)
-          NEW_VERSION="1.0.$COMMIT_COUNT"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: $NEW_VERSION"
-
-      - name: Update version in project file
-        run: |
-          # Update version in .csproj file
-          sed -i "s/<Version>.*<\/Version>/<Version>${{ steps.new_version.outputs.new_version }}<\/Version>/g" SoftArchitecture.csproj
-          sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ steps.new_version.outputs.new_version }}.0<\/AssemblyVersion>/g" SoftArchitecture.csproj
-          sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ steps.new_version.outputs.new_version }}.0<\/FileVersion>/g" SoftArchitecture.csproj
-
-      - name: Commit version update
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add SoftArchitecture.csproj
-          git commit -m "Auto-increment version to ${{ steps.new_version.outputs.new_version }}"
-          git push
-
       - name: Create release zip
         run: |
           # Create zip file from publish folder
           cd bin/publish
-          zip -r "../SoftArchitecture-v${{ steps.new_version.outputs.new_version }}.zip" .
+          zip -r "../SoftArchitecture-v${{ steps.current_version.outputs.current_version }}.zip" .
           cd ../..
 
       - name: Create Release
@@ -61,10 +34,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.new_version.outputs.new_version }}
-          release_name: SoftArchitecture v${{ steps.new_version.outputs.new_version }}
+          tag_name: v${{ steps.current_version.outputs.current_version }}
+          release_name: SoftArchitecture v${{ steps.current_version.outputs.current_version }}
           body: |
-            ## SoftArchitecture v${{ steps.new_version.outputs.new_version }}
+            ## SoftArchitecture v${{ steps.current_version.outputs.current_version }}
 
             ### What's New
             - Professional project management tool for software developers
@@ -86,6 +59,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/SoftArchitecture-v${{ steps.new_version.outputs.new_version }}.zip
-          asset_name: SoftArchitecture-v${{ steps.new_version.outputs.new_version }}.zip
+          asset_path: ./bin/SoftArchitecture-v${{ steps.current_version.outputs.current_version }}.zip
+          asset_name: SoftArchitecture-v${{ steps.current_version.outputs.current_version }}.zip
           asset_content_type: application/zip
