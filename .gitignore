@@ -1,7 +1,6 @@
-/bin/Debug/
-/bin/Release/
+/bin
+
 # Keep publish folder for releases
-!/bin/publish/
 .vs
 
 obj/

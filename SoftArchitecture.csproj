@@ -14,12 +14,17 @@
     <Product>Project Manager</Product>
     <Description>A professional project management tool for software developers</Description>
     <Copyright>Copyright © 2024</Copyright>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="SampleData\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
 </Project>
